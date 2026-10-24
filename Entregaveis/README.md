@@ -65,8 +65,8 @@ Fluxo resumido:
 │   ├── index.html                # tabela de clientes (fonte do RPA)
 │   └── data.csv                  # opções de investimento por perfil
 ├──  evidencias/
-│       ├── Assistente RPA - Execução Completa.png
-│       └── Email*                # um print por e-mail enviado (seção 8)
+│   ├── Assistente RPA - Execução Completa.png
+│   └── Email*                # um print por e-mail enviado (seção 8)
 ├── n8n/
 │   ├── Assistente RPA.json       # versão completa com agente IA (Gemini)
 │   └── Code*.js                  # scripts dos nós Code
