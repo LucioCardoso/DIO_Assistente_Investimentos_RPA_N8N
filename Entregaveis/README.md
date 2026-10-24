@@ -2,8 +2,8 @@
 
 Projeto da trilha DIO: um script de RPA (Python) coleta clientes de uma página HTML e os envia para um workflow N8N via Webhook. O N8N cruza cada cliente com as opções de investimento do seu perfil, e um agente de IA (Gemini) redige um e-mail personalizado, enviado pelo Gmail.
 
-> **Repositório (fork):** `https://github.com/<SEU_USUARIO>/DIO_Assistente_Investimentos_RPA_N8N`
-> **Repositório original:** `https://github.com/LucioCardoso/DIO_Assistente_Investimentos_RPA_N8N`
+> **Repositório (fork):** `https://github.com/LucioCardoso/DIO_Assistente_Investimentos_RPA_N8N`
+> **Repositório original:** `https://github.com/digitalinnovationone/dio-lab-assistente-investimentos-rpa-n8n/)`
 > **Data da execução de validação:** 24/10/2026
 
 ---
@@ -12,15 +12,13 @@ Projeto da trilha DIO: um script de RPA (Python) coleta clientes de uma página 
 
 | # | Entregável | Status | Onde está |
 |---|-----------|--------|-----------|
-| 1 | Repositório forkado com o workflow N8N implementado | ☐ | link do fork acima |
-| 2 | Workflow N8N exportado com **mensagens estáticas** | ☐ | `n8n/workflow.json` (seção 4.3) |
-| 3 | Script de RPA integrado ao Webhook do N8N | ☑ | seção 4.1 / `rpa/rpa_clientes.py` |
-| 4 | Print ou vídeo do fluxo de ponta a ponta | ☐ | seção 8 / `docs/evidencias/` |
-| 5 | Integração com Agente de IA no N8N | ☑ | seção 5 / `n8n/workflow_llm.json` |
+| 1 | Repositório forkado com o workflow N8N implementado | ☑ | link do fork acima |
+| 2 | Workflow N8N exportado completo (com LLM Gemini) | ☑ | seção 4.3  / `n8n/Assistente RPA.json` |
+| 3 | Script de RPA integrado ao Webhook do N8N | ☑ | seção 4.1 / `rpa/extrair_clientes.ipynb` |
+| 4 | Print do fluxo de ponta a ponta | ☑ | seção 8 / `evidencias/Assistente RPA - Execução Completa.png` |
+| 5 | Integração com Agente de IA no N8N | ☑ | seção 5 / `n8n/Assistente RPA.json` |
 | 6 | Mensagens geradas dinamicamente via LLM | ☑ | seções 5 e 8 |
 | 7 | Documentação explicando as decisões técnicas | ☑ | seção 6 |
-
-> Troque ☐ por ☑ conforme cada item for publicado no fork.
 
 ---
 
@@ -63,18 +61,16 @@ Fluxo resumido:
 .
 ├── docs/
 │   ├── index.html                # tabela de clientes (fonte do RPA)
-│   ├── data.csv                  # opções de investimento por perfil
-│   └── evidencias/
-│       ├── rpa_saida.png
-│       ├── workflow_sucesso.png
-│       └── emails/               # um print por e-mail enviado (seção 8)
+│   └── data.csv                  # opções de investimento por perfil
+├──  evidencias/
+│       ├── Assistente RPA - Execução Completa.png
+│       └── Email*                # um print por e-mail enviado (seção 8)
 ├── n8n/
-│   ├── workflow.json             # versão com mensagens estáticas
-│   ├── workflow_llm.json         # versão com agente de IA (Gemini)
-│   └── code/                     # scripts dos nós Code
+│   ├── Assistente RPA.json       # versão completa com agente IA (Gemini)
+│   └── Code*.js                  # scripts dos nós Code
 ├── rpa/
-│   └── rpa_clientes.py           # script Python (RPA)
-└── DOCUMENTACAO.md
+│   └── extrair_clientes.ipynb    # script Python (RPA)
+└── README.md                     # Documentação Projeto
 ```
 
 ---
@@ -83,7 +79,7 @@ Fluxo resumido:
 
 ### 4.1 Script de RPA (Python / Google Colab)
 
-Lê o HTML, extrai a tabela de clientes e envia ao Webhook do N8N. O host do N8N está mascarado neste documento (`<SEU_HOST>`).
+Lê o HTML, extrai a tabela de clientes e envia ao Webhook do N8N. O host do N8N está mascarado neste documento (`<MEU_HOST>`).
 
 ```python
 # Importação das bibliotecas necessárias
@@ -92,7 +88,7 @@ from bs4 import BeautifulSoup
 
 # Links externos
 URL_PAGINA = "https://raw.githubusercontent.com/LucioCardoso/DIO_Assistente_Investimentos_RPA_N8N/main/docs/index.html"
-N8N_WEBHOOK = "https://<SEU_HOST>.ts.net:8443/webhook-test/clientes"
+N8N_WEBHOOK = "https://<MEU_HOST>.ts.net:8443/webhook-test/clientes"
 
 # 1) Baixar a página
 html = requests.get(URL_PAGINA, timeout=30).text
@@ -154,8 +150,6 @@ Resposta: {"id":"1a16f7326bb806a9","threadId":"1a16f7326bb806a9","labelIds":["UN
 
 `Status: 200` e a resposta com `labelIds` contendo `SENT` confirmam que o workflow rodou até o envio pelo Gmail.
 
-> 📷 **Print da execução no Colab:** `![Saída do RPA](docs/evidencias/rpa_saida.png)`
-
 ### 4.2 Nós do workflow N8N
 
 | Nó | Tipo | Função |
@@ -173,7 +167,7 @@ Resposta: {"id":"1a16f7326bb806a9","threadId":"1a16f7326bb806a9","labelIds":["UN
 | Espera para não exceder RPM Gemini | Wait (`<N>` s) | Pausa entre chamadas ao Gemini |
 | Resposta ao Webhook | Respond to Webhook | Devolve a resposta ao RPA |
 
-> 📷 **Print do workflow executado com sucesso:** `![Workflow](docs/evidencias/workflow_sucesso.png)`
+> 📷 **Print do workflow executado com sucesso:** `![Workflow](<docs/evidencias/Assistente RPA - Execução Completa.png>)`
 
 #### Código: "Formata opções de investimento e perfil"
 
@@ -371,7 +365,7 @@ return {
 
 ### 4.3 Nó Gmail e e-mail de teste
 
-**Foram usados os e-mails do próprio aluno como destinatário, e não os e-mails da lista de clientes.** Os endereços da tabela (`ana@email.com`, `bruno@email.com` etc.) são fictícios e inválidos: um envio real geraria devoluções (bounces) e não permitiria verificar o resultado. Para validar a lógica e o funcionamento do fluxo, o campo **To** do nó Gmail foi fixado no endereço do próprio aluno (`<SEU_EMAIL>`), e as 10 mensagens chegaram na mesma caixa de entrada.
+**Foram usados os e-mails do próprio aluno como destinatário, e não os e-mails da lista de clientes.** Os endereços da tabela (`ana@email.com`, `bruno@email.com` etc.) são fictícios e inválidos: um envio real geraria devoluções (bounces) e não permitiria verificar o resultado. Para validar a lógica e o funcionamento do fluxo, o campo **To** do nó Gmail foi fixado no endereço do próprio aluno (`<MEU_EMAIL>`), e as 10 mensagens chegaram na mesma caixa de entrada.
 
 O que continua sendo validado com essa configuração:
 
@@ -384,14 +378,14 @@ Configuração do nó **Envia e-mail para o cliente**:
 
 | Campo | Teste (usado nesta entrega) | Uso real |
 |-------|------------------------------|----------|
-| To | `<SEU_EMAIL>` (endereço fixo do aluno) | `{{ $json.email_to }}` |
+| To | `<MEU_EMAIL>` (endereço fixo do aluno) | `{{ $json.email_to }}` |
 | Subject | `{{ $json.subject }}` | `{{ $json.subject }}` |
 | Email Type | HTML | HTML |
 | Message | `{{ $json.html_body }}` | `{{ $json.html_body }}` |
 
 Em produção, bastaria trocar o campo **To** pela expressão `{{ $json.email_to }}`, com e-mails reais e validados dos clientes, idealmente com consentimento para receber comunicações.
 
-### 4.4 Workflow com mensagens estáticas (`n8n/workflow.json`)
+### 4.4 Workflow com mensagens estáticas (`n8n/Assistente RPA.json`)
 
 A versão estática usa apenas as mensagens geradas pelo nó **Mensagens e melhor investimento para cliente** (três modelos de texto por situação, com uma sorteada em `mensagem_escolhida`). Ela é a mesma cadeia da seção 2 até o nó **Resultado único para um item por cliente**, sem Loop, Gemini, Extrair JSON e Wait. O campo `mensagem_base` é enviado direto no Gmail.
 
@@ -478,7 +472,7 @@ No primeiro teste, o modelo escreveu que a rentabilidade era de "12,5% **ao ano*
 
 ## 7. Como executar
 
-1. **N8N:** importe `n8n/workflow_llm.json` (ou `n8n/workflow.json` para a versão estática).
+1. **N8N:** importe `n8n/Assistente RPA.json`.
 2. **Credenciais:** configure Google Gemini (API Key) e Gmail (OAuth2). O JSON exportado guarda só a referência às credenciais, não os segredos.
 3. **Destinatário:** para teste, fixe o campo *To* do nó Gmail no seu e-mail; para uso real, `{{ $json.email_to }}`.
 4. **Teste:** clique em *Execute workflow* no nó Webhook (URL `/webhook-test/clientes`).
@@ -491,9 +485,8 @@ No primeiro teste, o modelo escreveu que a rentabilidade era de "12,5% **ao ano*
 
 ### 8.1 Fluxo de ponta a ponta
 
-- Saída do script Python (`Status: 200`): `docs/evidencias/rpa_saida.png`
-- Workflow executado com todos os nós verdes: `docs/evidencias/workflow_sucesso.png`
-- Vídeo (opcional): `<link>`
+- Saída do script Python (`Status: 200`): `rpa/extrair_clientes.ipynb`
+- Workflow executado com todos os nós verdes: `evidencias/Assistente RPA - Execução Completa.png`
 
 ### 8.2 E-mails enviados: personalização por cliente
 
@@ -514,17 +507,11 @@ Cada e-mail abaixo foi gerado pelo Gemini a partir dos dados do cliente e enviad
 
 #### 1. Ana Silva (Conservador, R$ 12.500,00)
 
-![E-mail enviado para Ana Silva](docs/evidencias/emails/01_ana_silva.png)
-
-> 📷 **[INSERIR PRINT DO E-MAIL RECEBIDO]**
-> **Observações sobre a personalização e a criatividade do modelo:** `<preencher>`
+![E-mail enviado para Ana Silva](<evidencias/Email 01 - Ana Silva.png>)
 
 #### 2. Bruno Lima (Moderado, R$ 3.200,00)
 
-![E-mail enviado para Bruno Lima](docs/evidencias/emails/02_bruno_lima.png)
-
-> 📷 **[INSERIR PRINT DO E-MAIL RECEBIDO]**
-> **Observações sobre a personalização e a criatividade do modelo:** `<preencher>`
+![E-mail enviado para Bruno Lima](<evidencias/Email 02 - Bruno Lima.png>)
 
 #### 3. Carla Souza (Arrojado, R$ 28.900,00)
 
