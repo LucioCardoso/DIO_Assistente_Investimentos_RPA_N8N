@@ -3,7 +3,9 @@
 Projeto da trilha DIO: um script de RPA (Python) coleta clientes de uma página HTML e os envia para um workflow N8N via Webhook. O N8N cruza cada cliente com as opções de investimento do seu perfil, e um agente de IA (Gemini) redige um e-mail personalizado, enviado pelo Gmail.
 
 > **Repositório (fork):** `https://github.com/LucioCardoso/DIO_Assistente_Investimentos_RPA_N8N`
+> 
 > **Repositório original:** `https://github.com/digitalinnovationone/dio-lab-assistente-investimentos-rpa-n8n/)`
+> 
 > **Data da execução de validação:** 24/10/2026
 
 ---
