@@ -169,7 +169,7 @@ Resposta: {"id":"1a16f7326bb806a9","threadId":"1a16f7326bb806a9","labelIds":["UN
 | Espera para não exceder RPM Gemini | Wait (`<N>` s) | Pausa entre chamadas ao Gemini |
 | Resposta ao Webhook | Respond to Webhook | Devolve a resposta ao RPA |
 
-> 📷 **Print do workflow executado com sucesso:** `![Workflow](<docs/evidencias/Assistente RPA - Execução Completa.png>)`
+> 📷 **Print do workflow executado com sucesso:** `![Workflow](<evidencias/Assistente RPA - Execução Completa.png>)`
 
 #### Código: "Formata opções de investimento e perfil"
 
@@ -517,59 +517,35 @@ Cada e-mail abaixo foi gerado pelo Gemini a partir dos dados do cliente e enviad
 
 #### 3. Carla Souza (Arrojado, R$ 28.900,00)
 
-![E-mail enviado para Carla Souza](docs/evidencias/emails/03_carla_souza.png)
-
-> 📷 **[INSERIR PRINT DO E-MAIL RECEBIDO]**
-> **Observações sobre a personalização e a criatividade do modelo:** `<preencher>`
+![E-mail enviado para Carla Souza](<evidencias/Email 03 - Carla Souza.png>)
 
 #### 4. Daniel Oliveira (Conservador, R$ 850,00)
 
-![E-mail enviado para Daniel Oliveira](docs/evidencias/emails/04_daniel_oliveira.png)
-
-> 📷 **[INSERIR PRINT DO E-MAIL RECEBIDO]**
-> **Observações sobre a personalização e a criatividade do modelo:** `<preencher>`
+![E-mail enviado para Daniel Oliveira](<evidencias/Email 04 - Daniel Oliveira.png>)
 
 #### 5. Elena Rodrigues (Arrojado, R$ 45.000,00)
 
-![E-mail enviado para Elena Rodrigues](docs/evidencias/emails/05_elena_rodrigues.png)
-
-> 📷 **[INSERIR PRINT DO E-MAIL RECEBIDO]**
-> **Observações sobre a personalização e a criatividade do modelo:** `<preencher>`
+![E-mail enviado para Elena Rodrigues](<evidencias/Email 05 - Elena Rodrigues.png>)
 
 #### 6. Felipe Santos (Moderado, R$ 7.800,00)
 
-![E-mail enviado para Felipe Santos](docs/evidencias/emails/06_felipe_santos.png)
-
-> 📷 **[INSERIR PRINT DO E-MAIL RECEBIDO]**
-> **Observações sobre a personalização e a criatividade do modelo:** `<preencher>`
+![E-mail enviado para Felipe Santos](<evidencias/Email 06 - Felipe Santos.png>)
 
 #### 7. Gabriela Costa (Conservador, R$ 1.500,00)
 
-![E-mail enviado para Gabriela Costa](docs/evidencias/emails/07_gabriela_costa.png)
-
-> 📷 **[INSERIR PRINT DO E-MAIL RECEBIDO]**
-> **Observações sobre a personalização e a criatividade do modelo:** `<preencher>`
+![E-mail enviado para Gabriela Costa](<evidencias/Email 07 - Gabriela Costa.png>)
 
 #### 8. Henrique Alves (Moderado, R$ 22.300,00)
 
-![E-mail enviado para Henrique Alves](docs/evidencias/emails/08_henrique_alves.png)
-
-> 📷 **[INSERIR PRINT DO E-MAIL RECEBIDO]**
-> **Observações sobre a personalização e a criatividade do modelo:** `<preencher>`
+![E-mail enviado para Henrique Alves](<evidencias/Email 08 - Henrique Alves.png>)
 
 #### 9. Isabela Martins (Conservador, R$ 500,00)
 
-![E-mail enviado para Isabela Martins](docs/evidencias/emails/09_isabela_martins.png)
-
-> 📷 **[INSERIR PRINT DO E-MAIL RECEBIDO]**
-> **Observações sobre a personalização e a criatividade do modelo:** `<preencher>`
+![E-mail enviado para Isabela Martins](<evidencias/Email 09 - Isabela Martins.png>)
 
 #### 10. João Pereira (Arrojado, R$ 15.000,00)
 
-![E-mail enviado para João Pereira](docs/evidencias/emails/10_joao_pereira.png)
-
-> 📷 **[INSERIR PRINT DO E-MAIL RECEBIDO]**
-> **Observações sobre a personalização e a criatividade do modelo:** `<preencher>`
+![E-mail enviado para João Pereira](<evidencias/Email 10 - Joao Pereira.png>)
 
 ### 8.3 Síntese da personalização (preencher após inserir os prints)
 
