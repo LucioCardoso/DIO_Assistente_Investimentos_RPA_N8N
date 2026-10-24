@@ -1,0 +1,358 @@
+{
+  "name": "Assistente RPA",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://raw.githubusercontent.com/LucioCardoso/DIO_Assistente_Investimentos_RPA_N8N/main/docs/data.csv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        256,
+        128
+      ],
+      "id": "d2b1f7be-a630-4fb8-ab17-01bdefe443a4",
+      "name": "Obtém opções de investimento por perfil"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clientes",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        32
+      ],
+      "id": "d8c34f68-4a33-467a-b930-a68b8049f0c0",
+      "name": "Obtém dados dos clientes",
+      "webhookId": "009d7472-5bfd-41ba-bbcc-45a26b065d98"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pega o .csv como texto vindo do HTTP Request\nconst csvRaw = $json.data ?? $json.body ?? $json;\nconst text = (typeof csvRaw === \"string\") ? csvRaw : JSON.stringify(csvRaw);\n\nconst lines = text.split(/\\r?\\n/).map(l => l.trim()).filter(Boolean);\nconst headers = lines[0].split(\",\").map(h => h.trim());\n\nconst investimentos = lines.slice(1).map(line => {\n  const cols = line.split(\",\").map(c => c.trim());\n  const obj = {};\n  headers.forEach((h, i) => obj[h] = cols[i] ?? \"\");\n\n  // normaliza mínimo para número\n  obj.minimo = Number(String(obj.minimo).replace(/[^\\d]/g, \"\")) || 0;\n\n  return obj;\n});\n\nreturn [{ json: { investimentos } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        128
+      ],
+      "id": "14d89611-77ee-466b-9c16-d1ace7fdd986",
+      "name": "Formata opções de investimento e perfil"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        704,
+        48
+      ],
+      "id": "f910b648-c36b-4a6b-b8f7-6adcdae0d385",
+      "name": "Combina dados clientes e opções investimento"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Entrada: 1 item vindo do Merge (clientes do Webhook + investimentos do CSV)\nconst dados = $input.first().json;\n\nconst clientes = dados.body?.clientes ?? dados.clientes;\nconst investimentos = dados.investimentos;\n\nif (!Array.isArray(clientes) || !Array.isArray(investimentos)) {\n  throw new Error(\"Esperado 'body.clientes' e 'investimentos' no item do Merge. Verifique o Merge e o Code anterior.\");\n}\n\n// Helpers\nconst norm = s => String(s ?? \"\").trim().toLowerCase()\n  .normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\");\n\n// \"R$ 12.500,00\" -> 12500\nconst parseSaldo = txt =>\n  Number(String(txt ?? \"\").replace(/[^\\d,]/g, \"\").replace(\",\", \".\")) || 0;\n\n// 1000 -> \"R$ 1.000,00\"\nconst brl = n =>\n  Number(n).toLocaleString(\"pt-BR\", { style: \"currency\", currency: \"BRL\" })\n    .replace(/\\u00a0/g, \" \");\n\nconst escolheAleatorio = arr => arr[Math.floor(Math.random() * arr.length)];\n\n// Processamento\nconst resultados = clientes.map(c => {\n  const saldo = parseSaldo(c.saldo);\n  const opcoes = investimentos.filter(i => norm(i.perfil) === norm(c.perfil));\n  const elegiveis = opcoes.filter(i => Number(i.minimo) <= saldo);\n\n  let recomendacao = null;\n  let motivo;\n\n  if (elegiveis.length) {\n    // maior mínimo que o saldo comporta\n    recomendacao = elegiveis.reduce((a, b) => Number(b.minimo) > Number(a.minimo) ? b : a);\n    motivo = \"saldo_ok\";\n  } else if (opcoes.length) {\n    // nenhuma opção cabe no saldo: sugere a mais acessível\n    recomendacao = opcoes.reduce((a, b) => Number(b.minimo) < Number(a.minimo) ? b : a);\n    motivo = \"saldo_insuficiente\";\n  } else {\n    motivo = \"perfil_sem_produto\";\n  }\n\n  let mensagens = [];\n  if (recomendacao) {\n    const prod = `**${recomendacao.produto}**`;\n    const min = brl(recomendacao.minimo);\n    const sal = brl(saldo);\n    const rent = recomendacao.rentabilidade;\n\n    if (motivo === \"saldo_ok\") {\n      mensagens = [\n        `Olá ${c.nome}! Pelo seu perfil (${c.perfil}), uma boa opção é ${prod} (mínimo ${min}). Com seu saldo atual (${sal}), você já consegue investir. Rentabilidade: ${rent}.`,\n        `Oi ${c.nome}! Recomendação para perfil ${c.perfil}: ${prod} (mínimo ${min}). Seu saldo (${sal}) já atende o mínimo. Rentabilidade: ${rent}.`,\n        `${c.nome}, indo direto ao ponto: para o perfil ${c.perfil}, ${prod} (mínimo ${min}). Você tem ${sal}, então dá pra aplicar. Rentabilidade: ${rent}.`\n      ];\n    } else {\n      const falta = brl(Number(recomendacao.minimo) - saldo);\n      mensagens = [\n        `Olá ${c.nome}! Pelo seu perfil (${c.perfil}), a opção mais acessível é ${prod} (mínimo ${min}). Seu saldo (${sal}) ainda não atinge o mínimo: faltam ${falta}. Rentabilidade: ${rent}.`,\n        `Oi ${c.nome}! Para perfil ${c.perfil}, a entrada mais baixa é ${prod} (mínimo ${min}). Com ${sal} ainda faltam ${falta}. Rentabilidade: ${rent}.`,\n        `${c.nome}, para o perfil ${c.perfil}, ${prod} exige ${min}. Seu saldo é ${sal}, faltam ${falta} para começar. Rentabilidade: ${rent}.`\n      ];\n    }\n  }\n\n  return {\n    nome: c.nome,\n    email: c.email,\n    perfil: c.perfil,\n    saldo_texto: c.saldo,\n    saldo_num: saldo,\n    recomendacao: recomendacao\n      ? {\n          perfil: recomendacao.perfil,\n          produto: recomendacao.produto,\n          minimo: Number(recomendacao.minimo),\n          rentabilidade: recomendacao.rentabilidade\n        }\n      : null,\n    motivo,\n    mensagens,\n    mensagem_escolhida: mensagens.length ? escolheAleatorio(mensagens) : \"\"\n  };\n});\n\nreturn [{\n  json: {\n    ok: true,\n    total_clientes: clientes.length,\n    total_investimentos: investimentos.length,\n    resultados\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        48
+      ],
+      "id": "61f861c7-5df0-428a-9611-34d0ec2166cd",
+      "name": "Mensagens e melhor investimento para cliente"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Entrada: 1 item vindo do \"Code in JavaScript1\" com o array 'resultados'\nconst resultados = $input.first().json.resultados;\n\nif (!Array.isArray(resultados)) {\n  throw new Error(\"Campo 'resultados' não encontrado ou não é um array. Verifique a saída do Code in JavaScript1.\");\n}\n\n// \"R$ 12.500,00\" -> 12500\nfunction parseBRL(valor) {\n  if (!valor) return 0;\n  const s = String(valor)\n    .replace(\"R$\", \"\")\n    .replace(/\\./g, \"\")\n    .replace(\",\", \".\")\n    .replace(/[^\\d.]/g, \"\")\n    .trim();\n  const n = Number(s);\n  return Number.isFinite(n) ? n : 0;\n}\n\n// Retorna UM ITEM por cliente\nreturn resultados.map(c => {\n  const saldoNum = c.saldo_num ?? parseBRL(c.saldo_texto ?? c.saldo);\n\n  return {\n    json: {\n      email_to: String(c.email ?? \"\").trim(),\n      nome: String(c.nome ?? \"\").trim(),\n      perfil: String(c.perfil ?? \"\").trim(),\n      saldo_texto: c.saldo_texto ?? c.saldo ?? \"\",\n      saldo_num: saldoNum,\n      recomendacao: c.recomendacao ?? null,\n      motivo: c.motivo ?? \"\",\n      mensagem_base: c.mensagem_escolhida ?? c.mensagens?.[0] ?? \"\"\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        48
+      ],
+      "id": "319439cb-4d95-42f2-be37-884b2bb6b0a5",
+      "name": "Resultado único para um item por cliente"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $json.content?.parts?.[0]?.text ?? \"\";\nconst limpo = raw.replace(/```json|```/g, \"\").trim();\n\nlet email;\ntry {\n  email = JSON.parse(limpo);\n} catch (e) {\n  throw new Error(\"Resposta do Gemini não é JSON válido: \" + limpo.slice(0, 200));\n}\n\nconst origem = $('Loop por cliente').item.json;\n\nreturn {\n  json: {\n    email_to: origem.email_to,\n    nome: origem.nome,\n    subject: email.subject,\n    text_body: email.text_body,\n    html_body: email.html_body\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1952,
+        64
+      ],
+      "id": "2750c921-2920-408f-9685-b50479562b66",
+      "name": "Extrair JSON e anexar e-mail"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1664,
+        -144
+      ],
+      "id": "1825b362-aafa-4f01-b104-2b6730aed3bf",
+      "name": "Resposta ao Webhook"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1376,
+        48
+      ],
+      "id": "de455efe-e990-4207-9211-4d37893ca240",
+      "name": "Loop por cliente"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Escreva um e-mail curto em pt-BR para o cliente abaixo, sem prometer ganhos e sem garantias.\n\nCliente:\nNome: {{ $json.nome }}\nPerfil: {{ $json.perfil }}\nSaldo: {{ $json.saldo_texto }}\n\nRecomendação:\nProduto: {{ $json.recomendacao?.produto }}\nMínimo: {{ Number($json.recomendacao?.minimo).toLocaleString(\"pt-BR\", { style: \"currency\", currency: \"BRL\" }) }}\nRentabilidade informada: {{ $json.recomendacao?.rentabilidade }}\nSituação: {{ $json.motivo }}\n\nMensagem base (use apenas como referência de conteúdo; reescreva com suas palavras):\n{{ $json.mensagem_base }}\n\nRegras:\n- Idioma: pt-BR.\n- Tom: amigável e profissional.\n- Tamanho: curto (até 8 linhas).\n- Evitar: promessas de ganho, garantias, linguagem agressiva.\n- Apresente o produto como sugestão informativa. A rentabilidade é uma referência do produto, nunca uma expectativa de retorno.\n- Cite a rentabilidade exatamente como informada (ex.: \"12.5%\"), sem acrescentar período como \"ao ano\" ou \"ao mês\".\n- Se a situação for \"saldo_insuficiente\", diga com delicadeza que o saldo ainda não atinge o mínimo e não pressione.\n- Não invente produtos, taxas, prazos ou valores além dos informados acima.\n- Não use markdown (sem **asteriscos**) no text_body; no html_body use apenas <p> e <strong>.\n- Encerre convidando o cliente a responder o e-mail para conversar, e assine como \"Equipe de Investimentos\".\n\nFormato de saída: responda SOMENTE com JSON válido, sem markdown e sem ```:\n{\n  \"subject\": \"...\",\n  \"text_body\": \"...\",\n  \"html_body\": \"...\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1600,
+        64
+      ],
+      "id": "9ae95fad-3ad0-4721-b2f3-6b493deb34b8",
+      "name": "Cria e-mail personalizado",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cNZ8QG2DqOF9L7lY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "lucio.cardoso@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.html_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2176,
+        64
+      ],
+      "id": "877a4234-dab8-4069-b85e-4112a6acacd9",
+      "name": "Envia e-mail para o cliente",
+      "webhookId": "0367bd14-5dbd-4836-837d-39113008f4a0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Jz23NF3Vq4bR6yTT",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2400,
+        64
+      ],
+      "id": "16cc1930-d4f4-4d9e-ae38-fff88582f14a",
+      "name": "Espera para não exceder RPM Gemini",
+      "webhookId": "232d0799-1a43-4fcd-9571-049c56b1ef6f"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Obtém opções de investimento por perfil": {
+      "main": [
+        [
+          {
+            "node": "Formata opções de investimento e perfil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtém dados dos clientes": {
+      "main": [
+        [
+          {
+            "node": "Obtém opções de investimento por perfil",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Combina dados clientes e opções investimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formata opções de investimento e perfil": {
+      "main": [
+        [
+          {
+            "node": "Combina dados clientes e opções investimento",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Combina dados clientes e opções investimento": {
+      "main": [
+        [
+          {
+            "node": "Mensagens e melhor investimento para cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagens e melhor investimento para cliente": {
+      "main": [
+        [
+          {
+            "node": "Resultado único para um item por cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resultado único para um item por cliente": {
+      "main": [
+        [
+          {
+            "node": "Loop por cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair JSON e anexar e-mail": {
+      "main": [
+        [
+          {
+            "node": "Envia e-mail para o cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resposta ao Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Loop por cliente": {
+      "main": [
+        [
+          {
+            "node": "Resposta ao Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cria e-mail personalizado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria e-mail personalizado": {
+      "main": [
+        [
+          {
+            "node": "Extrair JSON e anexar e-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia e-mail para o cliente": {
+      "main": [
+        [
+          {
+            "node": "Espera para não exceder RPM Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Espera para não exceder RPM Gemini": {
+      "main": [
+        [
+          {
+            "node": "Loop por cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "982335be-9b03-44c5-adee-3245459430e7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "53a930a1f3bcc753fd75d584febbfd3654b534679851e7326ffd0f1b5b4bdbf6"
+  },
+  "nodeGroups": [],
+  "id": "I9WvFmz58bMkDkMs",
+  "tags": []
+}
