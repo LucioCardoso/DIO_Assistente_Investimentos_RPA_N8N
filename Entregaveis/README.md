@@ -552,7 +552,7 @@ Cada e-mail abaixo foi gerado pelo Gemini a partir dos dados do cliente e enviad
 - **Adequação ao perfil:** `<como o texto muda entre Conservador, Moderado e Arrojado>`
 - **Variação de linguagem entre e-mails:** `<aberturas, estrutura e tom diferentes para clientes com o mesmo perfil>`
 - **Cumprimento das regras:** `<sem promessa de ganho, sem garantias, rentabilidade citada como informada, assinatura "Equipe de Investimentos">`
-- **Falhas encontradas, se houver:** `<ex.: prazo inventado, valor incorreto>`
+- **Falhas encontradas, se houver:** `<inconsistências de negrito no nome do cliente e rentabilidade>`
 
 ---
 
