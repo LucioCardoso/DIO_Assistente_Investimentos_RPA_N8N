@@ -488,7 +488,7 @@ No primeiro teste, o modelo escreveu que a rentabilidade era de "12,5% **ao ano*
 ### 8.1 Fluxo de ponta a ponta
 
 - Saída do script Python (`Status: 200`): `rpa/extrair_clientes.ipynb`
-- Workflow executado com todos os nós verdes: `evidencias/Assistente RPA - Execução Completa.png`
+- Workflow executado com todos os nós verdes: ![Workflow](<evidencias/Assistente RPA - Execução Completa.png>)
 
 ### 8.2 E-mails enviados: personalização por cliente
 
@@ -545,7 +545,7 @@ Cada e-mail abaixo foi gerado pelo Gemini a partir dos dados do cliente e enviad
 
 #### 10. João Pereira (Arrojado, R$ 15.000,00)
 
-![E-mail enviado para João Pereira](<evidencias/Email 10 - Joao Pereira.png>)
+![E-mail enviado para João Pereira](<evidencias/Email 10 - João Pereira.png>)
 
 ### 8.3 Síntese da personalização (preencher após inserir os prints)
 
