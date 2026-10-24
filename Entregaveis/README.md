@@ -169,7 +169,7 @@ Resposta: {"id":"1a16f7326bb806a9","threadId":"1a16f7326bb806a9","labelIds":["UN
 | Espera para não exceder RPM Gemini | Wait (`<N>` s) | Pausa entre chamadas ao Gemini |
 | Resposta ao Webhook | Respond to Webhook | Devolve a resposta ao RPA |
 
-> 📷 **Print do workflow executado com sucesso:** `![Workflow](<evidencias/Assistente RPA - Execução Completa.png>)`
+📷 **Print do workflow executado com sucesso:** ![Workflow](<evidencias/Assistente RPA - Execução Completa.png>)
 
 #### Código: "Formata opções de investimento e perfil"
 
